@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Vehicle Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="font-family: Arial; text-align:center;">
+
+<h2>🚗 Smart Vehicle Dashboard</h2>
+
+<h3 id="alcohol">Alcohol: --</h3>
+<h3 id="accel">Acceleration: --</h3>
+
+<p id="status">Status: Safe</p>
+
+<script>
+
+// 🚨 CHANGE THESE
+let phone = "91XXXXXXXXXX";
+let apikey = "YOUR_API_KEY";
+
+// Dummy data simulation
+setInterval(() => {
+
+  // simulate sensor values
+  let alcohol = Math.floor(Math.random() * 4000);
+  let accel = Math.floor(Math.random() * 4000);
+
+  document.getElementById("alcohol").innerText = "Alcohol: " + alcohol;
+  document.getElementById("accel").innerText = "Acceleration: " + accel;
+
+  // condition check
+  if (alcohol > 2500 || accel > 3500) {
+    document.getElementById("status").innerText = "🚨 ALERT";
+
+    sendAlert();
+  } else {
+    document.getElementById("status").innerText = "Safe";
+  }
+
+}, 5000);
+
+
+// 📍 Send WhatsApp alert automatically
+function sendAlert() {
+
+  if (navigator.geolocation) {
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+
+      let lat = position.coords.latitude;
+      let lon = position.coords.longitude;
+
+      let mapLink = "https://maps.google.com/?q=" + lat + "," + lon;
+
+      let message = "🚨 ALERT%0AAlcohol or Accident Detected%0ALocation:%20" + mapLink;
+
+      let url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${message}&apikey=${apikey}`;
+
+      window.open(url, "_blank");
+
+    });
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
