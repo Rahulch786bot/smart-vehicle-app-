@@ -137,21 +137,42 @@ Location: https://maps.google.com/?q=${lat},${lon}`;
 
 
 // 🔴 Manual Button Test
+<button onclick="manualTest()">🔴 Test Alert</button>
+
+<script>
 function manualTest() {
+  alert("Button clicked");
 
-  alertSent = false;
+  if (navigator.geolocation) {
 
-  navigator.geolocation.getCurrentPosition(function(position) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
 
-    let lat = position.coords.latitude;
-    let lon = position.coords.longitude;
+        alert("Location OK");
 
-    sendTelegram(lat, lon);
+        let lat = position.coords.latitude;
+        let lon = position.coords.longitude;
 
-  });
+        let token = "YOUR_BOT_TOKEN";
+        let chat_id = "7938594521";
 
+        let message = TEST LOCATION https://maps.google.com/?q=${lat},${lon};
+
+        let url = https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)};
+
+        fetch(url);
+
+      },
+      function(error) {
+        alert("Error: " + error.message);
+      }
+    );
+
+  } else {
+    alert("Geolocation not supported");
+  }
 }
-
+</script>
 </script>
 
 </body>
