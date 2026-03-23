@@ -1,68 +1,154 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Vehicle Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Vehicle Safety</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 28px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      margin: 20px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .value {
+      font-size: 30px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .safe {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    .alert {
+      color: #ff4d4d;
+      font-weight: bold;
+      font-size: 22px;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #ff9800;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
-<body style="font-family: Arial; text-align:center;">
+<body>
 
-<h2>🚗 Smart Vehicle Dashboard</h2>
+  <h1>🚗 Smart Vehicle Safety System</h1>
 
-<h3 id="alcohol">Alcohol: --</h3>
-<h3 id="accel">Acceleration: --</h3>
+  <div class="card">
+    <h2>🍺 Alcohol Level</h2>
+    <div id="alcohol" class="value">0</div>
+  </div>
 
-<p id="status">Status: Safe</p>
+  <div class="card">
+    <h2>⚡ Acceleration</h2>
+    <div id="accel" class="value">0</div>
+  </div>
+
+  <div class="card">
+    <h2>Status</h2>
+    <div id="status" class="safe">SAFE</div>
+  </div>
+
+  <button class="btn" onclick="manualTest()">🔴 Test Alert</button>
 
 <script>
 
-// 🚨 CHANGE THESE
-let phone = "91XXXXXXXXXX";
-let apikey = "YOUR_API_KEY";
+let token = "8616202899:AAGQTd1xWfTMxHQLDfBLLruVtJtyDdn2t2c";
+let chat_id = "7938594521";
 
-// Dummy data simulation
+let alertSent = false;
+
+// 🔁 Dummy Data Simulation
 setInterval(() => {
 
-  // simulate sensor values
   let alcohol = Math.floor(Math.random() * 4000);
   let accel = Math.floor(Math.random() * 4000);
 
-  document.getElementById("alcohol").innerText = "Alcohol: " + alcohol;
-  document.getElementById("accel").innerText = "Acceleration: " + accel;
+  document.getElementById("alcohol").innerText = alcohol;
+  document.getElementById("accel").innerText = accel;
 
-  // condition check
-  if (alcohol > 2500 || accel > 3500) {
+  if ((alcohol > 2500 || accel > 3500) && !alertSent) {
+
+    alertSent = true;
     document.getElementById("status").innerText = "🚨 ALERT";
+    document.getElementById("status").className = "alert";
 
-    sendAlert();
-  } else {
-    document.getElementById("status").innerText = "Safe";
-  }
-
-}, 5000);
-
-
-// 📍 Send WhatsApp alert automatically
-function sendAlert() {
-
-  if (navigator.geolocation) {
-
-    navigator.geolocation.getCurrentPosition(function(position) {
-
-      let lat = position.coords.latitude;
-      let lon = position.coords.longitude;
-
-      let mapLink = "https://maps.google.com/?q=" + lat + "," + lon;
-
-      let message = "🚨 ALERT%0AAlcohol or Accident Detected%0ALocation:%20" + mapLink;
-
-      let url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${message}&apikey=${apikey}`;
-
-      window.open(url, "_blank");
-
-    });
+    getLocationAndSend();
 
   }
+
+}, 4000);
+
+
+// 📍 Get Location + Send Telegram
+function getLocationAndSend() {
+
+  navigator.geolocation.getCurrentPosition(function(position) {
+
+    let lat = position.coords.latitude;
+    let lon = position.coords.longitude;
+
+    sendTelegram(lat, lon);
+
+  });
+
+}
+
+
+// 📩 Telegram Send
+function sendTelegram(lat, lon) {
+
+  let message = `🚨 ALERT
+Alcohol or Accident Detected
+Location: https://maps.google.com/?q=${lat},${lon}`;
+
+  let url = https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)};
+
+  fetch(url)
+    .then(() => console.log("Sent"))
+    .catch(err => console.log(err));
+}
+
+
+// 🔴 Manual Button Test
+function manualTest() {
+
+  alertSent = false;
+
+  navigator.geolocation.getCurrentPosition(function(position) {
+
+    let lat = position.coords.latitude;
+    let lon = position.coords.longitude;
+
+    sendTelegram(lat, lon);
+
+  });
 
 }
 
