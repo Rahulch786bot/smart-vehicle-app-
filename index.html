@@ -605,15 +605,14 @@ function getLocationAndSend() {
 }
 
 
-// 📩 Telegram Send
-function sendTelegram(lat, lon) {
-  let message = `🚨 ALERT\nAlcohol or Accident Detected\nLocation: https://maps.google.com/?q=${lat},${lon}`;
-  let url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)}`;
-  fetch(url)
-    .then(() => { console.log("Sent"); logEntry("✅ Telegram message dispatched.", "success"); })
-    .catch(err => { console.log(err); logEntry("❌ Telegram send failed: " + err, "danger"); });
-}
+function sendAlertToServer(lat, lon) {
 
+  let url = `https://telegram-server-1lbt.onrender.com/alert?lat=${lat}&lon=${lon}`;
+
+  fetch(url)
+    .then(() => console.log("Alert sent to server"))
+    .catch(err => console.log(err));
+}
 
 // 🔴 Manual Test Button
 function manualTest() {
