@@ -13,69 +13,51 @@
       text-align: center;
     }
 
-    h1 {
-      margin-top: 20px;
-      font-size: 28px;
-    }
+    h1 { margin-top: 20px; }
 
     .card {
       background: rgba(255,255,255,0.1);
       margin: 20px;
       padding: 20px;
       border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
 
-    .value {
-      font-size: 30px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
+    .value { font-size: 30px; }
 
-    .safe {
-      color: #00ff88;
-      font-weight: bold;
-    }
-
-    .alert {
-      color: #ff4d4d;
-      font-weight: bold;
-      font-size: 22px;
-    }
+    .safe { color: #00ff88; }
+    .alert { color: red; }
 
     .btn {
-      margin-top: 20px;
-      padding: 12px 20px;
+      padding: 15px;
+      font-size: 18px;
+      background: orange;
       border: none;
       border-radius: 10px;
-      background: #ff9800;
       color: white;
-      font-size: 16px;
-      cursor: pointer;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>🚗 Smart Vehicle Safety System</h1>
+<h1>🚗 Smart Vehicle Safety</h1>
 
-  <div class="card">
-    <h2>🍺 Alcohol Level</h2>
-    <div id="alcohol" class="value">0</div>
-  </div>
+<div class="card">
+  <h2>Alcohol</h2>
+  <div id="alcohol" class="value">0</div>
+</div>
 
-  <div class="card">
-    <h2>⚡ Acceleration</h2>
-    <div id="accel" class="value">0</div>
-  </div>
+<div class="card">
+  <h2>Acceleration</h2>
+  <div id="accel" class="value">0</div>
+</div>
 
-  <div class="card">
-    <h2>Status</h2>
-    <div id="status" class="safe">SAFE</div>
-  </div>
+<div class="card">
+  <h2>Status</h2>
+  <div id="status" class="safe">SAFE</div>
+</div>
 
-  <button class="btn" onclick="manualTest()">🔴 Test Alert</button>
+<button class="btn" onclick="manualTest()">🔴 Test Alert</button>
 
 <script>
 
@@ -84,7 +66,7 @@ let chat_id = "7938594521";
 
 let alertSent = false;
 
-// 🔁 Dummy Data Simulation
+// Dummy Data
 setInterval(() => {
 
   let alcohol = Math.floor(Math.random() * 4000);
@@ -94,41 +76,39 @@ setInterval(() => {
   document.getElementById("accel").innerText = accel;
 
   if ((alcohol > 2500 || accel > 3500) && !alertSent) {
-
     alertSent = true;
     document.getElementById("status").innerText = "🚨 ALERT";
     document.getElementById("status").className = "alert";
-
     getLocationAndSend();
-
   }
 
 }, 4000);
 
 
-// 📍 Get Location + Send Telegram
+// Location + Telegram
 function getLocationAndSend() {
 
-  navigator.geolocation.getCurrentPosition(function(position) {
-
-    let lat = position.coords.latitude;
-    let lon = position.coords.longitude;
-
-    sendTelegram(lat, lon);
-
-  });
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      let lat = position.coords.latitude;
+      let lon = position.coords.longitude;
+      sendTelegram(lat, lon);
+    },
+    function(error) {
+      alert("Location error: " + error.message);
+    }
+  );
 
 }
 
 
-// 📩 Telegram Send
+// Send Telegram
 function sendTelegram(lat, lon) {
 
   let message = `🚨 ALERT
-Alcohol or Accident Detected
 Location: https://maps.google.com/?q=${lat},${lon}`;
 
-  let url = https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)};
+  let url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)}`;
 
   fetch(url)
     .then(() => console.log("Sent"))
@@ -136,47 +116,10 @@ Location: https://maps.google.com/?q=${lat},${lon}`;
 }
 
 
-// 🔴 Manual Button Test
-<button onclick="manualTest()">🔴 Test Alert</button>
-
-<script>
-
+// Button test
 function manualTest() {
-  alert("Button clicked ✅");
-
-  if (!navigator.geolocation) {
-    alert("Geolocation not supported ❌");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-
-      alert("Location OK ✅");
-
-      let lat = position.coords.latitude;
-      let lon = position.coords.longitude;
-
-      let token = "8616202899:AAGQTd1xWfTMxHQLDfBLLruVtJtyDdn2t2c";
-      let chat_id = "7938594521";
-
-      let message = `🚨 TEST ALERT
-Location: https://maps.google.com/?q=${lat},${lon}`;
-
-      let url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)}`;
-
-      fetch(url)
-        .then(() => alert("Message Sent ✅"))
-        .catch(err => alert("Error ❌ " + err));
-
-    },
-    function(error) {
-      alert("Location Error ❌: " + error.message);
-    },
-    {
-      enableHighAccuracy: true
-    }
-  );
+  alert("Button Working ✅");
+  getLocationAndSend();
 }
 
 </script>
