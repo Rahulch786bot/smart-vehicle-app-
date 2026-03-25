@@ -595,7 +595,7 @@ function getLocationAndSend() {
       let lon = position.coords.longitude;
       locStatusEl.innerText = "Active";
       logEntry(`📍 GPS acquired: ${lat.toFixed(4)}, ${lon.toFixed(4)}`, "success");
-      sendTelegram(lat, lon);
+      sendAlertToServer(lat, lon);
     },
     function(error) {
       logEntry("⚠️ Location error: " + error.message, "danger");
