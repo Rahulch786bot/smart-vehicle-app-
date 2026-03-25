@@ -607,7 +607,7 @@ function getLocationAndSend() {
 
 function sendAlertToServer(lat, lon) {
 
-  let url = `https://telegram-server-1lbt.onrender.com/alert?lat=${lat}&lon=${lon}`;
+ let url = `https://your-app.up.railway.app/alert?lat=${lat}&lon=${lon}`;
 
   fetch(url)
     .then(() => console.log("Alert sent to server"))
