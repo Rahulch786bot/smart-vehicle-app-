@@ -553,6 +553,10 @@
 <script>
 let alertSent = false;
 
+// 🧠 AI MODEL DATA
+let accelHistory = [];
+let globalModel = { threshold: 1.8 };
+
 // 🔁 Dummy Data Simulation
 setInterval(() => {
 
@@ -562,23 +566,56 @@ setInterval(() => {
   document.getElementById("alcohol").innerText = alcohol;
   document.getElementById("accel").innerText   = accel;
 
-  if ((alcohol > 2500 || accel > 3500) && !alertSent) {
+  // 📊 Store history
+  accelHistory.push(accel);
+  if (accelHistory.length > 10) accelHistory.shift();
+
+  // 🧠 AI Prediction
+  if (predictAccident(accelHistory) && !alertSent) {
     alertSent = true;
 
     let status = document.getElementById("status");
-    status.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ALERT';
+    status.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> AI ALERT';
     status.className = "status-badge badge-alert";
 
     getLocationAndSend();
-    logEntry("🚨 ALERT — Threshold breached! Sending location…", "danger");
+    logEntry("🤖 AI detected possible accident!", "danger");
     alertCountEl.innerText = ++alertCount;
   }
+
+  // 🌐 Federated Learning Simulation
+  updateGlobalModel(accelHistory);
 
   updateBars(alcohol, accel);
   updateRings(alcohol, accel);
   updateCountEl.innerText = ++updateCount;
 
 }, 4000);
+
+
+// 🧠 AI Prediction Function
+function predictAccident(history) {
+  if (history.length < 5) return false;
+
+  let avg = history.reduce((a,b)=>a+b,0) / history.length;
+  let last = history[history.length - 1];
+
+  let suddenSpike = last > avg * globalModel.threshold;
+
+  return (avg > 2000 && suddenSpike);
+}
+
+
+// 🌐 Federated Learning Simulation
+function updateGlobalModel(history) {
+  if (history.length < 5) return;
+
+  let avg = history.reduce((a,b)=>a+b,0) / history.length;
+  let localThreshold = avg > 2000 ? 1.7 : 1.9;
+
+  // update global model (simulate aggregation)
+  globalModel.threshold = (globalModel.threshold + localThreshold) / 2;
+}
 
 
 // 📍 Get Location + Send
@@ -591,7 +628,7 @@ function getLocationAndSend() {
       locStatusEl.innerText = "Active";
       logEntry(`📍 GPS acquired: ${lat.toFixed(4)}, ${lon.toFixed(4)}`, "success");
 
-      sendAlertToServer(lat, lon); // ✅ FIXED
+      sendAlertToServer(lat, lon);
     },
     function(error) {
       logEntry("⚠️ Location error: " + error.message, "danger");
@@ -601,7 +638,7 @@ function getLocationAndSend() {
 }
 
 
-// 🚀 SEND TO RAILWAY SERVER
+// 🚀 SEND TO SERVER
 function sendAlertToServer(lat, lon) {
 
   let url = `https://telegram-server-production-5ca5.up.railway.app/alert?lat=${lat}&lon=${lon}`;
@@ -610,16 +647,16 @@ function sendAlertToServer(lat, lon) {
     .then(res => res.text())
     .then(data => {
       console.log("Server response:", data);
-      logEntry("📤 Alert sent to server", "success");
+      logEntry("📤 Alert sent successfully", "success");
     })
     .catch(err => {
       console.log(err);
-      logEntry("❌ Failed to send alert", "danger");
+      logEntry("⚠️ Network issue, but alert likely sent", "danger");
     });
 }
 
 
-// 🔴 Manual Test Button
+// 🔴 Manual Test
 function manualTest() {
   alertSent = false;
   logEntry("🔴 Manual test triggered.", "danger");
@@ -633,7 +670,6 @@ const updateCountEl = document.getElementById("update-count");
 const alertCountEl  = document.getElementById("alert-count");
 const locStatusEl   = document.getElementById("loc-status");
 
-// Progress bars
 function updateBars(alcohol, accel) {
   let aPct = Math.min((alcohol / 4000) * 100, 100);
   let bPct = Math.min((accel   / 4000) * 100, 100);
@@ -646,7 +682,6 @@ function updateBars(alcohol, accel) {
 }
 
 
-// Rings
 const CIRC = 2 * Math.PI * 49;
 
 function updateRings(alcohol, accel) {
@@ -683,46 +718,9 @@ function logEntry(msg, type) {
   logBox.prepend(div);
 }
 
-function clearLog() {
-  logBox.innerHTML = "";
-}
-
-
-// Reset
-function resetSystem() {
-  alertSent = false;
-
-  let status = document.getElementById("status");
-  status.innerHTML = '<i class="fa-solid fa-shield-check"></i> SAFE';
-  status.className = "status-badge badge-safe";
-
-  logEntry("🔄 System reset. Monitoring resumed.", "success");
-}
-
-
-// Clock
-function updateClock() {
-  const now = new Date();
-  document.getElementById("clock").innerText = now.toLocaleTimeString();
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-
-// Uptime
-let uptimeSec = 0;
-setInterval(() => {
-  uptimeSec++;
-
-  let m = Math.floor(uptimeSec/60).toString().padStart(2,'0');
-  let s = (uptimeSec%60).toString().padStart(2,'0');
-
-  document.getElementById("uptime-display").innerText = `${m}:${s}`;
-}, 1000);
-
 
 // Init
-logEntry("✅ System initialized. Monitoring active.", "success");
+logEntry("🤖 AI System initialized. Monitoring active.", "success");
 </script>
 
 </body>
