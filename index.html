@@ -551,11 +551,6 @@
 
 
 <script>
-/* ──────────────────────────────────────────────
-   ORIGINAL LOGIC — UNCHANGED
-────────────────────────────────────────────── */
-let token   = "8616202899:AAGQTd1xWfTMxHQLDfBLLruVtJtyDdn2t2c";
-let chat_id = "7938594521";
 let alertSent = false;
 
 // 🔁 Dummy Data Simulation
@@ -579,7 +574,6 @@ setInterval(() => {
     alertCountEl.innerText = ++alertCount;
   }
 
-  // UI updates
   updateBars(alcohol, accel);
   updateRings(alcohol, accel);
   updateCountEl.innerText = ++updateCount;
@@ -593,9 +587,11 @@ function getLocationAndSend() {
     function(position) {
       let lat = position.coords.latitude;
       let lon = position.coords.longitude;
+
       locStatusEl.innerText = "Active";
       logEntry(`📍 GPS acquired: ${lat.toFixed(4)}, ${lon.toFixed(4)}`, "success");
-      sendAlertToServer(lat, lon);
+
+      sendAlertToServer(lat, lon); // ✅ FIXED
     },
     function(error) {
       logEntry("⚠️ Location error: " + error.message, "danger");
@@ -605,14 +601,23 @@ function getLocationAndSend() {
 }
 
 
+// 🚀 SEND TO RAILWAY SERVER
 function sendAlertToServer(lat, lon) {
 
- let url = `https://your-app.up.railway.app/alert?lat=${lat}&lon=${lon}`;
+  let url = `https://telegram-server-production-5ca5.up.railway.app/alert?lat=${lat}&lon=${lon}`;
 
   fetch(url)
-    .then(() => console.log("Alert sent to server"))
-    .catch(err => console.log(err));
+    .then(res => res.text())
+    .then(data => {
+      console.log("Server response:", data);
+      logEntry("📤 Alert sent to server", "success");
+    })
+    .catch(err => {
+      console.log(err);
+      logEntry("❌ Failed to send alert", "danger");
+    });
 }
+
 
 // 🔴 Manual Test Button
 function manualTest() {
@@ -621,9 +626,8 @@ function manualTest() {
   getLocationAndSend();
 }
 
-/* ──────────────────────────────────────────────
-   NEW UI HELPERS
-────────────────────────────────────────────── */
+
+// ───── UI HELPERS ─────
 let updateCount = 0, alertCount = 0;
 const updateCountEl = document.getElementById("update-count");
 const alertCountEl  = document.getElementById("alert-count");
@@ -633,104 +637,92 @@ const locStatusEl   = document.getElementById("loc-status");
 function updateBars(alcohol, accel) {
   let aPct = Math.min((alcohol / 4000) * 100, 100);
   let bPct = Math.min((accel   / 4000) * 100, 100);
+
   document.getElementById("alcohol-bar").style.width = aPct + "%";
   document.getElementById("accel-bar").style.width   = bPct + "%";
+
   document.getElementById("alcohol-pct").innerText = Math.round(aPct) + "%";
   document.getElementById("accel-pct").innerText   = Math.round(bPct) + "%";
 }
 
-// SVG gauge rings (circumference 307.9 for r=49; we use ~345 for display ring)
-const CIRC = 2 * Math.PI * 49; // ≈ 307.9
+
+// Rings
+const CIRC = 2 * Math.PI * 49;
+
 function updateRings(alcohol, accel) {
   let aPct = Math.min(alcohol / 4000, 1);
   let bPct = Math.min(accel   / 4000, 1);
+
   document.getElementById("ring-a").style.strokeDasharray  = CIRC;
   document.getElementById("ring-a").style.strokeDashoffset = CIRC * (1 - aPct);
+
   document.getElementById("ring-b").style.strokeDasharray  = CIRC;
   document.getElementById("ring-b").style.strokeDashoffset = CIRC * (1 - bPct);
+
   document.getElementById("ring-a-val").innerText = alcohol;
   document.getElementById("ring-b-val").innerText = accel;
+
   document.getElementById("ring-a-pct").innerText = Math.round(aPct*100) + "%";
   document.getElementById("ring-b-pct").innerText = Math.round(bPct*100) + "%";
 }
 
+
 // Log
 const logBox = document.getElementById("log-box");
+
 function logEntry(msg, type) {
   let now = new Date();
   let ts  = now.toTimeString().slice(0,8);
+
   let div = document.createElement("div");
   div.className = "log-entry";
-  div.innerHTML = `<span class="log-ts">[${ts}]</span><span class="log-msg ${type||''}">${msg}</span>`;
+
+  div.innerHTML = `<span class="log-ts">[${ts}]</span>
+                   <span class="log-msg ${type||''}">${msg}</span>`;
+
   logBox.prepend(div);
 }
-function clearLog() { logBox.innerHTML = ""; }
 
+function clearLog() {
+  logBox.innerHTML = "";
+}
+
+
+// Reset
 function resetSystem() {
   alertSent = false;
+
   let status = document.getElementById("status");
   status.innerHTML = '<i class="fa-solid fa-shield-check"></i> SAFE';
   status.className = "status-badge badge-safe";
+
   logEntry("🔄 System reset. Monitoring resumed.", "success");
 }
+
 
 // Clock
 function updateClock() {
   const now = new Date();
   document.getElementById("clock").innerText = now.toLocaleTimeString();
 }
-setInterval(updateClock, 1000); updateClock();
+setInterval(updateClock, 1000);
+updateClock();
+
 
 // Uptime
 let uptimeSec = 0;
 setInterval(() => {
   uptimeSec++;
+
   let m = Math.floor(uptimeSec/60).toString().padStart(2,'0');
   let s = (uptimeSec%60).toString().padStart(2,'0');
+
   document.getElementById("uptime-display").innerText = `${m}:${s}`;
 }, 1000);
 
+
+// Init
 logEntry("✅ System initialized. Monitoring active.", "success");
-
-/* ──────────────────────────────────────────────
-   PARTICLE BACKGROUND
-────────────────────────────────────────────── */
-(function() {
-  const canvas = document.getElementById("particles");
-  const ctx    = canvas.getContext("2d");
-  let W, H, dots = [];
-
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  window.addEventListener("resize", resize); resize();
-
-  for (let i = 0; i < 60; i++) {
-    dots.push({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.5+0.5,
-      dx: (Math.random()-0.5)*0.3,
-      dy: (Math.random()-0.5)*0.3,
-      o: Math.random()*0.4+0.1
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    dots.forEach(d => {
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(0,229,255,${d.o})`;
-      ctx.fill();
-      d.x += d.dx; d.y += d.dy;
-      if (d.x<0||d.x>W) d.dx*=-1;
-      if (d.y<0||d.y>H) d.dy*=-1;
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
 </script>
 
 </body>
