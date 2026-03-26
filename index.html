@@ -549,12 +549,12 @@
 
 </div><!-- /app -->
 
-
 <script>
 let alertSent = false;
 
 // 🧠 AI MODEL DATA
 let accelHistory = [];
+let alcoholHistory = [];
 let globalModel = { threshold: 1.8 };
 
 // 🔁 Dummy Data Simulation
@@ -568,13 +568,20 @@ setInterval(() => {
 
   // 📊 Store history
   accelHistory.push(accel);
+  alcoholHistory.push(alcohol);
+
   if (accelHistory.length > 10) accelHistory.shift();
+  if (alcoholHistory.length > 10) alcoholHistory.shift();
 
-  // 🔥 DEBUG
-  console.log("Accel:", accel, "AI:", predictAccident(accelHistory));
+  console.log("Accel:", accel, "Alcohol:", alcohol);
 
-  // ✅ FIXED CONDITION (AI + THRESHOLD)
-  if ((predictAccident(accelHistory) || accel > 3000) && !alertSent) {
+  // 🧠 AI Prediction
+  let accident = predictAccident(accelHistory);
+  let drunk    = predictAlcohol(alcoholHistory);
+
+  // ✅ FINAL CONDITION
+  if ((accident || drunk || accel > 3000 || alcohol > 2500) && !alertSent) {
+
     alertSent = true;
 
     let status = document.getElementById("status");
@@ -582,12 +589,19 @@ setInterval(() => {
     status.className = "status-badge badge-alert";
 
     getLocationAndSend();
-    logEntry("🚨 ALERT triggered (AI / High Acceleration)", "danger");
+
+    logEntry("🚨 ALERT! AI detected risk (Alcohol / Acceleration)", "danger");
     alertCountEl.innerText = ++alertCount;
+
+    // 🔄 AUTO RESET
+    setTimeout(() => {
+      alertSent = false;
+      logEntry("🔄 Alert system reset", "success");
+    }, 15000);
   }
 
   // 🌐 Federated Learning Simulation
-  updateGlobalModel(accelHistory);
+  updateGlobalModel(accelHistory, alcoholHistory);
 
   updateBars(alcohol, accel);
   updateRings(alcohol, accel);
@@ -596,7 +610,7 @@ setInterval(() => {
 }, 4000);
 
 
-// 🧠 AI Prediction
+// 🧠 ACCIDENT AI
 function predictAccident(history) {
   if (history.length < 5) return false;
 
@@ -609,31 +623,46 @@ function predictAccident(history) {
 }
 
 
-// 🌐 Federated Learning Simulation
-function updateGlobalModel(history) {
-  if (history.length < 5) return;
+// 🧠 ALCOHOL AI
+function predictAlcohol(history) {
+  if (history.length < 5) return false;
 
   let avg = history.reduce((a,b)=>a+b,0) / history.length;
-  let localThreshold = avg > 2000 ? 1.7 : 1.9;
+
+  return avg > 2200; // drunk detection
+}
+
+
+// 🌐 FEDERATED MODEL UPDATE
+function updateGlobalModel(accelHist, alcoholHist) {
+
+  if (accelHist.length < 5) return;
+
+  let accelAvg = accelHist.reduce((a,b)=>a+b,0) / accelHist.length;
+  let alcoholAvg = alcoholHist.reduce((a,b)=>a+b,0) / alcoholHist.length;
+
+  let localThreshold = accelAvg > 2000 ? 1.7 : 1.9;
 
   globalModel.threshold = (globalModel.threshold + localThreshold) / 2;
 }
 
 
-// 📍 Get Location + Send
+// 📍 GET LOCATION
 function getLocationAndSend() {
   navigator.geolocation.getCurrentPosition(
     function(position) {
+
       let lat = position.coords.latitude;
       let lon = position.coords.longitude;
 
       locStatusEl.innerText = "Active";
-      logEntry(`📍 GPS acquired: ${lat.toFixed(4)}, ${lon.toFixed(4)}`, "success");
+
+      logEntry(`📍 GPS: ${lat.toFixed(4)}, ${lon.toFixed(4)}`, "success");
 
       sendAlertToServer(lat, lon);
     },
     function(error) {
-      console.log("Location error:", error);
+      console.log(error);
       logEntry("⚠️ Location error: " + error.message, "danger");
       locStatusEl.innerText = "Error";
     }
@@ -659,7 +688,7 @@ function sendAlertToServer(lat, lon) {
 }
 
 
-// 🔴 Manual Test
+// 🔴 MANUAL TEST
 function manualTest() {
   alertSent = false;
   logEntry("🔴 Manual test triggered.", "danger");
@@ -669,11 +698,13 @@ function manualTest() {
 
 // ───── UI HELPERS ─────
 let updateCount = 0, alertCount = 0;
+
 const updateCountEl = document.getElementById("update-count");
 const alertCountEl  = document.getElementById("alert-count");
 const locStatusEl   = document.getElementById("loc-status");
 
 function updateBars(alcohol, accel) {
+
   let aPct = Math.min((alcohol / 4000) * 100, 100);
   let bPct = Math.min((accel   / 4000) * 100, 100);
 
@@ -688,6 +719,7 @@ function updateBars(alcohol, accel) {
 const CIRC = 2 * Math.PI * 49;
 
 function updateRings(alcohol, accel) {
+
   let aPct = Math.min(alcohol / 4000, 1);
   let bPct = Math.min(accel   / 4000, 1);
 
@@ -705,7 +737,7 @@ function updateRings(alcohol, accel) {
 }
 
 
-// Log
+// 🧾 LOG
 const logBox = document.getElementById("log-box");
 
 function logEntry(msg, type) {
@@ -722,8 +754,8 @@ function logEntry(msg, type) {
 }
 
 
-// Init
-logEntry("🤖 AI System initialized. Monitoring active.", "success");
+// 🚀 INIT
+logEntry("🤖 AI + Federated System initialized", "success");
 </script>
 </body>
 </html>
