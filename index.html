@@ -570,8 +570,11 @@ setInterval(() => {
   accelHistory.push(accel);
   if (accelHistory.length > 10) accelHistory.shift();
 
-  // 🧠 AI Prediction
-  if (predictAccident(accelHistory) && !alertSent) {
+  // 🔥 DEBUG
+  console.log("Accel:", accel, "AI:", predictAccident(accelHistory));
+
+  // ✅ FIXED CONDITION (AI + THRESHOLD)
+  if ((predictAccident(accelHistory) || accel > 3000) && !alertSent) {
     alertSent = true;
 
     let status = document.getElementById("status");
@@ -579,7 +582,7 @@ setInterval(() => {
     status.className = "status-badge badge-alert";
 
     getLocationAndSend();
-    logEntry("🤖 AI detected possible accident!", "danger");
+    logEntry("🚨 ALERT triggered (AI / High Acceleration)", "danger");
     alertCountEl.innerText = ++alertCount;
   }
 
@@ -593,7 +596,7 @@ setInterval(() => {
 }, 4000);
 
 
-// 🧠 AI Prediction Function
+// 🧠 AI Prediction
 function predictAccident(history) {
   if (history.length < 5) return false;
 
@@ -613,7 +616,6 @@ function updateGlobalModel(history) {
   let avg = history.reduce((a,b)=>a+b,0) / history.length;
   let localThreshold = avg > 2000 ? 1.7 : 1.9;
 
-  // update global model (simulate aggregation)
   globalModel.threshold = (globalModel.threshold + localThreshold) / 2;
 }
 
@@ -631,6 +633,7 @@ function getLocationAndSend() {
       sendAlertToServer(lat, lon);
     },
     function(error) {
+      console.log("Location error:", error);
       logEntry("⚠️ Location error: " + error.message, "danger");
       locStatusEl.innerText = "Error";
     }
@@ -722,6 +725,5 @@ function logEntry(msg, type) {
 // Init
 logEntry("🤖 AI System initialized. Monitoring active.", "success");
 </script>
-
 </body>
 </html>
