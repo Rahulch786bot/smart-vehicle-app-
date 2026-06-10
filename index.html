@@ -673,7 +673,7 @@ function getLocationAndSend() {
 // 🚀 SEND TO SERVER
 function sendAlertToServer(lat, lon) {
 
-  let url = `https://telegram-server-production-5ca5.up.railway.app/alert?lat=${lat}&lon=${lon}`;
+  let url = `https://telegram-server-1lbt.onrender.com/alert?lat=${lat}&lon=${lon}`;
 
   fetch(url)
     .then(res => res.text())
