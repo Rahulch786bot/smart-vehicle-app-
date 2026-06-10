@@ -557,58 +557,93 @@ let accelHistory = [];
 let alcoholHistory = [];
 let globalModel = { threshold: 1.8 };
 
-// 🔁 Dummy Data Simulation
-setInterval(() => {
+// 🔁 REAL SENSOR DATA FROM ESP32
+setInterval(async () => {
 
-  let alcohol = Math.floor(Math.random() * 4000);
-  let accel   = Math.floor(Math.random() * 4000);
+  try {
 
-  document.getElementById("alcohol").innerText = alcohol;
-  document.getElementById("accel").innerText   = accel;
+    let response = await fetch(
+      "https://telegram-server-1lbt.onrender.com/sensor"
+    );
 
-  // 📊 Store history
-  accelHistory.push(accel);
-  alcoholHistory.push(alcohol);
+    let data = await response.json();
 
-  if (accelHistory.length > 10) accelHistory.shift();
-  if (alcoholHistory.length > 10) alcoholHistory.shift();
+    let alcohol = data.alcohol || 0;
 
-  console.log("Accel:", accel, "Alcohol:", alcohol);
+    let accel = Math.sqrt(
+      (data.x || 0) * (data.x || 0) +
+      (data.y || 0) * (data.y || 0) +
+      (data.z || 0) * (data.z || 0)
+    );
 
-  // 🧠 AI Prediction
-  let accident = predictAccident(accelHistory);
-  let drunk    = predictAlcohol(alcoholHistory);
+    accel = Math.round(accel);
 
-  // ✅ FINAL CONDITION
-  if ((accident || drunk || accel > 3000 || alcohol > 2500) && !alertSent) {
+    document.getElementById("alcohol").innerText = alcohol;
+    document.getElementById("accel").innerText = accel;
 
-    alertSent = true;
+    accelHistory.push(accel);
+    alcoholHistory.push(alcohol);
 
-    let status = document.getElementById("status");
-    status.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> AI ALERT';
-    status.className = "status-badge badge-alert";
+    if (accelHistory.length > 10) accelHistory.shift();
+    if (alcoholHistory.length > 10) alcoholHistory.shift();
 
-    getLocationAndSend();
+    let accident = predictAccident(accelHistory);
+    let drunk = predictAlcohol(alcoholHistory);
 
-    logEntry("🚨 ALERT! AI detected risk (Alcohol / Acceleration)", "danger");
-    alertCountEl.innerText = ++alertCount;
+    if ((accident || drunk || accel > 3500 || alcohol > 2500) && !alertSent) {
 
-    // 🔄 AUTO RESET
-    setTimeout(() => {
-      alertSent = false;
-      logEntry("🔄 Alert system reset", "success");
-    }, 15000);
+      alertSent = true;
+
+      let status = document.getElementById("status");
+
+      status.innerHTML =
+        '<i class="fa-solid fa-triangle-exclamation"></i> AI ALERT';
+
+      status.className = "status-badge badge-alert";
+
+      getLocationAndSend();
+
+      logEntry(
+        "🚨 ALERT! AI detected risk (Alcohol / Acceleration)",
+        "danger"
+      );
+
+      alertCountEl.innerText = ++alertCount;
+
+      setTimeout(() => {
+
+        alertSent = false;
+
+        logEntry(
+          "🔄 Alert system reset",
+          "success"
+        );
+
+      }, 15000);
+    }
+
+    updateGlobalModel(
+      accelHistory,
+      alcoholHistory
+    );
+
+    updateBars(alcohol, accel);
+    updateRings(alcohol, accel);
+
+    updateCountEl.innerText = ++updateCount;
+
+  }
+  catch(err) {
+
+    console.log(err);
+
+    logEntry(
+      "⚠️ Sensor server offline",
+      "danger"
+    );
   }
 
-  // 🌐 Federated Learning Simulation
-  updateGlobalModel(accelHistory, alcoholHistory);
-
-  updateBars(alcohol, accel);
-  updateRings(alcohol, accel);
-  updateCountEl.innerText = ++updateCount;
-
-}, 4000);
-
+}, 2000);
 
 // 🧠 ACCIDENT AI
 function predictAccident(history) {
